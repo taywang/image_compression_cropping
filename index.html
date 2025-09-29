@@ -311,6 +311,8 @@ startBtn.addEventListener('click', async () => {
                     canvas.toBlob(blobCallback, 'image/png');
                 } else if (type === 'image/jpeg') {
                     canvas.toBlob(blobCallback, 'image/jpeg', quality);
+                } else if (type === 'image/jpg') {
+                    canvas.toBlob(blobCallback, 'image/jpg', quality);
                 } else if (type === 'image/webp') {
                     canvas.toBlob(blobCallback, 'image/webp', quality);
                 } else {
