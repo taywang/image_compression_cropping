@@ -34,7 +34,7 @@
       }
       #progressBar {
         width: 80%;
-        height: 10px;
+        height: 20px;
         border-radius: 8px;
         overflow: hidden;
         appearance: none;
@@ -47,10 +47,6 @@
         background-color: #4caf50;
         border-radius: 8px;
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-      }
-      #progressText {
-        margin-top: 5px;
-        font-weight: bold;
       }
       #controls {
         display: flex;
@@ -143,6 +139,7 @@
       }
       #status {
         margin-top: 15px;
+        margin-bottom: 15px;
         text-align: center;
         font-weight: bold;
         color: #333;
@@ -192,8 +189,9 @@
 
     <div id="progressContainer">
       <progress id="progressBar" value="0" max="100"></progress>
-      <div id="progressText">0 / 0</div>
     </div>
+
+    <div id="status"></div>
 
     <div id="controls">
       <label
@@ -235,8 +233,6 @@
       <tbody></tbody>
     </table>
 
-    <div id="status"></div>
-
     <div id="previewOverlay"><img src="" alt="预览图" /></div>
 
     <script>
@@ -250,7 +246,6 @@
       const fileListTable = document.querySelector("#fileList tbody");
       const progressContainer = document.getElementById("progressContainer");
       const progressBar = document.getElementById("progressBar");
-      const progressText = document.getElementById("progressText");
       const previewOverlay = document.getElementById("previewOverlay");
       const previewImg = previewOverlay.querySelector("img");
       const inputTip = document.getElementById("inputTip");
@@ -393,7 +388,6 @@
       function updateProgress(index, total, row, blob) {
         const percent = Math.round(((index + 1) / total) * 100);
         progressBar.value = percent;
-        progressText.textContent = `${index + 1} / ${total}`;
         status.textContent = `已处理 ${index + 1} / ${total} 张`;
         if (row) {
           row.cells[3].textContent = `${row.newWidth} x ${row.newHeight}`;
@@ -415,7 +409,6 @@
 
         progressContainer.style.display = "block";
         progressBar.value = 0;
-        progressText.textContent = `0 / ${filesList.length}`;
 
         for (let i = 0; i < filesList.length; i++) {
           const fileObj = filesList[i];
@@ -438,7 +431,7 @@
         const link = document.createElement("a");
         link.href = URL.createObjectURL(zipBlob);
         const nowDate = new Date();
-        link.download = `图片压缩包_${nowDate.toLocaleDateString()} ${nowDate.toLocaleTimeString()}.zip`;
+        link.download = `图片压缩包_${nowDate.toISOString()}.zip`;
         link.click();
         status.textContent = "处理完成，已生成压缩包！";
       });
