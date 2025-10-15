@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>图片批量缩放压缩打包</title>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.0/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js"></script>
     <style>
       body {
         font-family: "Segoe UI", Arial, sans-serif;
@@ -21,10 +23,17 @@
       #pngTip {
         text-align: center;
         font-size: 12px;
-        color: #f44336;
-        margin-bottom: 15px;
+        color: #64b5e8;
+        margin-bottom: 5px; /* 原来 15px，改小即可 */
         text-decoration: underline;
         font-weight: 600;
+      }
+      #convertTip {
+        text-align: center;
+        font-size: 16px;
+        color: #ca462b;
+        font-weight: 600;
+        margin-top: 0; /* 避免浏览器默认的 margin */
       }
       #progressContainer {
         width: 100%;
@@ -184,7 +193,14 @@
   </head>
   <body>
     <h1>图片批量缩放压缩打包</h1>
-    <div id="pngTip">PNG图片只处理尺寸，不会压缩！</div>
+    <div id="pngTip">只支持 PNG，JPG，JPEG 格式</div>
+    <div id="convertTip">
+      其他格式建议先使用
+      <a href="https://www.iloveimg.com/zh-cn/convert-to-jpg" target="_blank">
+        https://www.iloveimg.com/zh-cn/convert-to-jpg
+      </a>
+      转换
+    </div>
     <div id="inputTip"></div>
 
     <div id="progressContainer">
@@ -199,7 +215,7 @@
         <input type="number" id="maxSize" value="1024" min="128" /> px
       </label>
       <label
-        >压缩后质量：
+        >压缩质量：
         <input type="number" id="quality" value="80" min="20" max="100" /> %
       </label>
       <label>
@@ -226,7 +242,7 @@
           <th>处理后尺寸</th>
           <th>原始大小</th>
           <th>处理后大小</th>
-          <th>压缩后比例</th>
+          <th>压缩比例</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -354,7 +370,8 @@
           const img = new Image();
           const reader = new FileReader();
           reader.onload = (e) => (img.src = e.target.result);
-          img.onload = () => {
+
+          img.onload = async () => {
             let w = img.width,
               h = img.height;
             if (!keepOriginal) {
@@ -362,6 +379,7 @@
               w = Math.round(w * scale);
               h = Math.round(h * scale);
             }
+
             const canvas = document.createElement("canvas");
             canvas.width = w;
             canvas.height = h;
@@ -369,14 +387,24 @@
             ctx.drawImage(img, 0, 0, w, h);
 
             if (file.type === "image/png") {
-              // 不压缩PNG
-              resolve({ blob: file, width: w, height: h });
+              const imageData = ctx.getImageData(0, 0, w, h);
+              const rgba = imageData.data;
+              const rgbaArr = new Uint8Array(rgba); // 转普通 Uint8Array
+              const colorDepth = Math.max(16, Math.round(quality * 256));
+              const compressed = UPNG.encode(
+                [rgbaArr.buffer],
+                w,
+                h,
+                colorDepth
+              );
+
+              const blob = new Blob([compressed], { type: "image/png" });
+              resolve({ blob, width: w, height: h });
             } else {
+              // 原有 JPEG 分支保持不变
               canvas.toBlob(
                 (blob) => resolve({ blob, width: w, height: h }),
-                file.type === "image/jpeg" || file.type === "image/jpg"
-                  ? "image/jpeg"
-                  : file.type,
+                "image/jpeg",
                 quality
               );
             }
